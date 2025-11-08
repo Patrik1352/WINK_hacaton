@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JsonSchemaMappingsProjectConfiguration">
+    <state>
+      <map>
+        <entry key="JSON Schema 2020-12">
+          <value>
+            <SchemaInfo>
+              <option name="name" value="JSON Schema 2020-12" />
+              <option name="relativePathToSchema" value="https://json-schema.org/draft/2020-12/schema" />
+              <option name="schemaVersion" value="JSON Schema 202,012" />
+              <option name="applicationDefined" value="true" />
+              <option name="patterns">
+                <list>
+                  <Item>
+                    <option name="path" value="data/parsing/json/1 кейс Сценарии c Таблицами/Отмороженные 1 (c таблицей)/ОТМОРОЖЕННЫЕ 1 - 13 Кино для взрослых (для ИРИ 28.11)(изменения).json" />
+                  </Item>
+                </list>
+              </option>
+            </SchemaInfo>
+          </value>
+        </entry>
+        <entry key="JSON Schema 7">
+          <value>
+            <SchemaInfo>
+              <option name="name" value="JSON Schema 7" />
+              <option name="relativePathToSchema" value="http://json-schema.org/draft-07/schema" />
+              <option name="schemaVersion" value="JSON Schema 7" />
+              <option name="applicationDefined" value="true" />
+              <option name="patterns">
+                <list>
+                  <Item>
+                    <option name="path" value="data/parsing/json/1 кейс Сценарии c Таблицами/Отмороженные 1 (c таблицей)/ОТМОРОЖЕННЫЕ 1 - 06 Док, верни нас обратно (для ИРИ 28.11)(изменения).json" />
+                  </Item>
+                </list>
+              </option>
+            </SchemaInfo>
+          </value>
+        </entry>
+      </map>
+    </state>
+  </component>
+</project>
