@@ -13,7 +13,7 @@ client = OpenAI(
   api_key=LLM_API_KEY,
 )
 
-def get_response_llm(query = 'What is the meaning of life?', model = 'mistralai/mistral-7b-instruct:free'):
+def get_response_llm(query = 'What is the meaning of life?', model = 'minimax/minimax-m2:free'):
     completion = client.chat.completions.create(
       # extra_headers={
       #   "HTTP-Referer": "<YOUR_SITE_URL>", # Optional. Site URL for rankings on openrouter.ai.

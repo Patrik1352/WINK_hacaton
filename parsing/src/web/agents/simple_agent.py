@@ -4,7 +4,7 @@ from typing import TypedDict, List, Dict
 from langgraph.graph import StateGraph, START, END
 
 # Используем уже готовое подключение к OpenRouter
-from src.web.connect_openrouter import get_response_llm
+from parsing.src.web.connect_openrouter import get_response_llm
 
 
 class AgentState(TypedDict):

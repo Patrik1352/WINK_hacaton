@@ -8,7 +8,7 @@ import pandas as pd
 
 from langgraph.graph import StateGraph, START, END
 
-from src.web.connect_openrouter import get_response_llm
+from parsing.src.web.connect_openrouter import get_response_llm
 
 
 class SceneInsightsState(TypedDict, total=False):
