@@ -1,10 +1,6 @@
-from typing import TypedDict, List, Dict, Any, Callable, Tuple
-import re
-import json
-import os
-
 import re
 from typing import List, Dict, Any, Tuple
+
 
 def _default_parse_scenes(markdown_text: str) -> List[Dict[str, Any]]:
     """Парсинг сцен в сценарии, включая случаи без явных номеров.
@@ -14,19 +10,22 @@ def _default_parse_scenes(markdown_text: str) -> List[Dict[str, Any]]:
       - **1.1 НАТ. ...**
       - 1-16. НАТ. ...
       - **1-3-N1. ...**
+      - **1-4-А. ИНТ. ...**
+      - **1-4-В. ИНТ. ...**
       - НАТ. ГОРОД. ДЕНЬ
       - ИНТ. КВАРТИРА. ВЕЧЕР
     """
 
-    # Регулярка для формализованных заголовков
+    # Регулярка для формализованных заголовков с номером
+    # Поддерживает буквенные суффиксы (А, В, N1 и т.д.)
     header_regex_numbered = re.compile(
-        r"^(?:\*\*)?\s*(?P<id>[0-9]+(?:[.-][0-9A-Za-z]+)*?)\.?\s+(?P<title>(?:НАТ|ИНТ|EXT|INT|EXT)\..+?)\s*(?:\*\*)?$",
+        r"^(?:\*\*)?\s*(?P<id>[0-9]+(?:[.-][0-9A-Za-zА-Яа-я]+)*?)\.?\s+(?P<title>(?:НАТ|ИНТ|EXT|INT)\..+?)\s*(?:\*\*)?$",
         re.IGNORECASE
     )
 
     # Регулярка для заголовков без номера (начинаются с НАТ., ИНТ., EXT., INT.)
     header_regex_plain = re.compile(
-        r"^(?:\*\*)?\s*(?P<title>(?:НАТ|ИНТ|EXT|INT|EXT)\..+?)\s*(?:\*\*)?$",
+        r"^(?:\*\*)?\s*(?P<title>(?:НАТ|ИНТ|EXT|INT)\..+?)\s*(?:\*\*)?$",
         re.IGNORECASE
     )
 
@@ -66,12 +65,6 @@ def _default_parse_scenes(markdown_text: str) -> List[Dict[str, Any]]:
         end = headers[idx + 1][0] if idx + 1 < len(headers) else len(lines)
         text_block = "\n".join(lines[start:end]).strip()
 
-
-        match = re.findall(r'\d+', scene_id)
-        if match:
-            scene_id = int(match[-1])  # Берем последнее число
-
-
         scenes.append({
             "id": scene_id,
             "title": title,
@@ -79,3 +72,24 @@ def _default_parse_scenes(markdown_text: str) -> List[Dict[str, Any]]:
         })
 
     return scenes
+
+
+# Тест на вашем примере
+if __name__ == "__main__":
+    test_text = """**1-4-А. ИНТ. КВАРТИРА БОКОВА.ВАННАЯ НОЧЬ 1. **
+**МАРИНА (00:12)**
+
+На раковине в ванной – яркое пятно крови. Молодая, очень худая женщина (МАРИНА), кашляет и сплёвывает очередной сгусток, включает воду, смывает кровь, ополаскивает лицо и выходит из ванной.
+
+**1-4-В. ИНТ. КВАРТИРА БОКОВА.КОМНАТА НОЧЬ 1. **
+**БОКОВ, МАРИНА, милиционер 1 (01:38)**
+
+Текст второй сцены."""
+
+    scenes = _default_parse_scenes(test_text)
+
+    for scene in scenes:
+        print(f"ID: {scene['id']}")
+        print(f"Title: {scene['title']}")
+        print(f"Text: {scene['text'][:100]}...")
+        print("-" * 50)
