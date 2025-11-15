@@ -211,3 +211,5 @@ __marimo__/
 __pycache__
 
 .DS_Store/
+temp/
+logs/

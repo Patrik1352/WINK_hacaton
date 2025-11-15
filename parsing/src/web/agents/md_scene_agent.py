@@ -1,10 +1,10 @@
 import re
 import json
 from typing import List, Dict, Any, Tuple, Optional
-from .llm_model import call_llm
+# from .llm_model import call_llm
 from tqdm.auto import tqdm
 import datetime
-
+import os
 
 def _parse_scene_id(scene_id: str) -> Tuple[List[int], Optional[str]]:
     """
@@ -498,43 +498,42 @@ def _default_parse_scenes(markdown_text: str) -> List[Dict[str, Any]]:
             "text": text_block
         })
 
-    # Проверяем наличие пропусков в нумерации
-    gaps = _detect_gaps_in_numbering(scenes)
+    # # Проверяем наличие пропусков в нумерации
+    # gaps = _detect_gaps_in_numbering(scenes)
 
-    # Обрабатываем пропуски, начиная с конца, чтобы индексы не сбивались
-    for current_idx, next_idx in tqdm(reversed(gaps)):
-        current_scene = scenes[current_idx]
-        next_scene = scenes[next_idx]
+    # # Обрабатываем пропуски, начиная с конца, чтобы индексы не сбивались
+    # for current_idx, next_idx in tqdm(reversed(gaps)):
+    #     current_scene = scenes[current_idx]
+    #     next_scene = scenes[next_idx]
 
-        # Берем текст текущей сцены для анализа
-        # LLM будет искать в нем скрытые заголовки сцен и разбивать текст
-        text_to_split = current_scene['text']
+    #     # Берем текст текущей сцены для анализа
+    #     # LLM будет искать в нем скрытые заголовки сцен и разбивать текст
+    #     text_to_split = current_scene['text']
 
-        # Если текст пустой или очень короткий, пропускаем
-        if not text_to_split or len(text_to_split.strip()) < 50:
-            continue
+    #     # Если текст пустой или очень короткий, пропускаем
+    #     if not text_to_split or len(text_to_split.strip()) < 50:
+    #         continue
 
-        # Вызываем LLM для разбиения
-        sub_scenes = _split_scene_with_llm(
-            text_to_split,
-            current_scene['id'],
-            next_scene['id']
-        )
+    #     # Вызываем LLM для разбиения
+    #     sub_scenes = _split_scene_with_llm(
+    #         text_to_split,
+    #         current_scene['id'],
+    #         next_scene['id']
+    #     )
 
-        # Заменяем текущую сцену на разбитые под-сцены
-        # Первая под-сцена заменяет текущую, остальные вставляются после
-        if sub_scenes and len(sub_scenes) > 0:
-            # Если LLM вернула только одну сцену с тем же ID, оставляем как есть
-            if len(sub_scenes) == 1 and sub_scenes[0]['id'] == current_scene['id']:
-                continue
+    #     # Заменяем текущую сцену на разбитые под-сцены
+    #     # Первая под-сцена заменяет текущую, остальные вставляются после
+    #     if sub_scenes and len(sub_scenes) > 0:
+    #         # Если LLM вернула только одну сцену с тем же ID, оставляем как есть
+    #         if len(sub_scenes) == 1 and sub_scenes[0]['id'] == current_scene['id']:
+    #             continue
 
-            scenes[current_idx] = sub_scenes[0]
-            # Вставляем остальные под-сцены после текущей
-            for i, sub_scene in enumerate(sub_scenes[1:], start=1):
-                scenes.insert(current_idx + i, sub_scene)
+    #         scenes[current_idx] = sub_scenes[0]
+    #         # Вставляем остальные под-сцены после текущей
+    #         for i, sub_scene in enumerate(sub_scenes[1:], start=1):
+    #             scenes.insert(current_idx + i, sub_scene)
 
     return scenes
-
 
 # Тест на вашем примере
 if __name__ == "__main__":
