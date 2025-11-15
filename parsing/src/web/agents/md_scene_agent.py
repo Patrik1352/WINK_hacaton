@@ -1,36 +1,21 @@
 import re
 from typing import List, Dict, Any, Tuple
 
-
 def _default_parse_scenes(markdown_text: str) -> List[Dict[str, Any]]:
-    """Парсинг сцен в сценарии, включая случаи без явных номеров.
+    """Парсинг сцен с игнорированием заголовков, содержащих 'УДАЛЕНА'."""
 
-    Поддерживает:
-      - **3-1. НАТ. ...**
-      - **1.1 НАТ. ...**
-      - 1-16. НАТ. ...
-      - **1-3-N1. ...**
-      - **1-4-А. ИНТ. ...**
-      - **1-4-В. ИНТ. ...**
-      - НАТ. ГОРОД. ДЕНЬ
-      - ИНТ. КВАРТИРА. ВЕЧЕР
-    """
-
-    # Регулярка для формализованных заголовков с номером
-    # Поддерживает буквенные суффиксы (А, В, N1 и т.д.)
     header_regex_numbered = re.compile(
-        r"^(?:\*\*)?\s*(?P<id>[0-9]+(?:[.-][0-9A-Za-zА-Яа-я]+)*?)\.?\s+(?P<title>(?:НАТ|ИНТ|EXT|INT)\..+?)\s*(?:\*\*)?$",
+        r"^\s*(?P<id>[0-9]+(?:[.\-][0-9A-Za-zА-Яа-я]+)*)\.?\s*(?P<title>(?:НАТ|ИНТ|EXT|INT)(?:/ИНТ)?\..*)$",
         re.IGNORECASE
     )
 
-    # Регулярка для заголовков без номера (начинаются с НАТ., ИНТ., EXT., INT.)
     header_regex_plain = re.compile(
-        r"^(?:\*\*)?\s*(?P<title>(?:НАТ|ИНТ|EXT|INT)\..+?)\s*(?:\*\*)?$",
+        r"^\s*(?P<title>(?:НАТ|ИНТ|EXT|INT)(?:/ИНТ)?\..*)$",
         re.IGNORECASE
     )
 
     lines = markdown_text.splitlines()
-    headers: List[Tuple[int, str, str]] = []  # (line_idx, id, title)
+    headers: List[Tuple[int, str, str]] = []
     auto_counter = 1
 
     for i, line in enumerate(lines):
@@ -38,27 +23,32 @@ def _default_parse_scenes(markdown_text: str) -> List[Dict[str, Any]]:
         if not stripped:
             continue
 
-        # Сначала пытаемся найти заголовок с номером
-        m = header_regex_numbered.match(stripped)
+        # Убираем ВСЕ звездочки внутри номера и названия сцены
+        cleaned = re.sub(r'\*+', '', stripped)
+
+        # Заголовок с номером
+        m = header_regex_numbered.match(cleaned)
         if m:
             scene_id = m.group("id").strip()
             title = m.group("title").strip()
+            if "УДАЛЕНА" in title.upper():
+                continue  # Пропускаем такие сцены
             headers.append((i, scene_id, title))
             continue
 
-        # Потом ищем заголовки без номера
-        m = header_regex_plain.match(stripped)
+        # Заголовок без номера
+        m = header_regex_plain.match(cleaned)
         if m:
+            title = m.group("title").strip()
+            if "УДАЛЕНА" in title.upper():
+                continue  # Пропускаем такие сцены
             scene_id = str(auto_counter)
             auto_counter += 1
-            title = m.group("title").strip()
             headers.append((i, scene_id, title))
 
-    # Если не нашли ни одного заголовка — возвращаем весь текст одной сценой
     if not headers:
         return [{"id": "0", "title": "FULL", "text": markdown_text.strip()}]
 
-    # Разбиваем текст по найденным заголовкам
     scenes: List[Dict[str, Any]] = []
     for idx, (line_idx, scene_id, title) in enumerate(headers):
         start = line_idx + 1
@@ -71,25 +61,120 @@ def _default_parse_scenes(markdown_text: str) -> List[Dict[str, Any]]:
             "text": text_block
         })
 
+    _check_scene_order(scenes)
     return scenes
 
+def _check_scene_order(scenes: List[Dict[str, Any]]) -> None:
+    def parse_scene_id(scene_id: str) -> Tuple[List[int], str]:
+        parts = re.split(r'[.\-]', scene_id)
+        numbers = []
+        suffix = ""
+        for part in parts:
+            if part.isdigit():
+                numbers.append(int(part))
+            else:
+                m = re.match(r'^(\d+)', part)
+                if m:
+                    numbers.append(int(m.group(1)))
+                    suffix = part[len(m.group(1)):]
+                else:
+                    suffix = part
+        return numbers, suffix
 
-# Тест на вашем примере
+    prev_numbers = None
+    prev_suffix = ""
+    prev_id = None
+
+    for scene in scenes:
+        scene_id = scene["id"]
+        if scene_id.isdigit():
+            continue
+        numbers, suffix = parse_scene_id(scene_id)
+        if prev_numbers is not None and numbers:
+            if len(numbers) >= 1 and len(prev_numbers) >= 1:
+                if numbers[0] < prev_numbers[0]:
+                    print(f"⚠️  WARNING: Нарушен порядок нумерации сцен: '{prev_id}' -> '{scene_id}'")
+                elif numbers[0] == prev_numbers[0] and len(numbers) > 1 and len(prev_numbers) > 1:
+                    if numbers[1] < prev_numbers[1]:
+                        print(f"⚠️  WARNING: Нарушен порядок подномеров: '{prev_id}' -> '{scene_id}'")
+        if numbers:
+            prev_numbers = numbers
+            prev_suffix = suffix
+            prev_id = scene_id
+
+# Тесты
 if __name__ == "__main__":
-    test_text = """**1-4-А. ИНТ. КВАРТИРА БОКОВА.ВАННАЯ НОЧЬ 1. **
+    # Тест 1: Оригинальный пример
+    test_text1 = """**1-4-А. ИНТ. КВАРТИРА БОКОВА.ВАННАЯ НОЧЬ 1. **
 **МАРИНА (00:12)**
 
-На раковине в ванной – яркое пятно крови. Молодая, очень худая женщина (МАРИНА), кашляет и сплёвывает очередной сгусток, включает воду, смывает кровь, ополаскивает лицо и выходит из ванной.
+На раковине в ванной – яркое пятно крови.
 
 **1-4-В. ИНТ. КВАРТИРА БОКОВА.КОМНАТА НОЧЬ 1. **
 **БОКОВ, МАРИНА, милиционер 1 (01:38)**
 
 Текст второй сцены."""
 
-    scenes = _default_parse_scenes(test_text)
+    print("=== ТЕСТ 1: Оригинальный пример ===")
+    scenes1 = _default_parse_scenes(test_text1)
+    for scene in scenes1:
+        print(f"ID: {scene['id']}, Title: {scene['title']}")
+    print()
 
-    for scene in scenes:
-        print(f"ID: {scene['id']}")
-        print(f"Title: {scene['title']}")
-        print(f"Text: {scene['text'][:100]}...")
-        print("-" * 50)
+    # Тест 2: Проблемные случаи
+    test_text2 = """**7-****1****. ИНТ. БОЛЬНИЦА.ПАЛАТА ЛЕНЫ ЕФИМОВОЙ. **
+Текст первой сцены.
+
+**7-****2****. ИНТ. кабинет ****РАЙКИНОЙ. ДЕНЬ**
+Текст второй сцены.
+
+**1-****6.ИНТ****. ЭКСПОЦЕНТР / ЦДП. ФОЙЕ. ДЕНЬ 2.**
+Текст третьей сцены."""
+
+    print("=== ТЕСТ 2: Звездочки внутри номера ===")
+    scenes2 = _default_parse_scenes(test_text2)
+    for scene in scenes2:
+        print(f"ID: {scene['id']}, Title: {scene['title']}")
+    print()
+
+    # Тест 3: Десятичная точка в номере
+    test_text3 = """**3.0-N1. ИНТ. МОСКВА. РАДИОСТАНЦИЯ. НОЧЬ. СД 2. 00:30**
+Текст сцены."""
+
+    print("=== ТЕСТ 3: Десятичная точка ===")
+    scenes3 = _default_parse_scenes(test_text3)
+    for scene in scenes3:
+        print(f"ID: {scene['id']}, Title: {scene['title']}")
+    print()
+
+    # Тест 4: Ложное срабатывание
+    test_text4 = """интересам? Я бы вступила
+
+ПСИХОЛОГ
+
+Тебе помогает сладкое? Тебе с ним лучше?
+
+**1. ИНТ. КВАРТИРА. ДЕНЬ**
+Настоящая сцена."""
+
+    print("=== ТЕСТ 4: Избегание ложных срабатываний ===")
+    scenes4 = _default_parse_scenes(test_text4)
+    for scene in scenes4:
+        print(f"ID: {scene['id']}, Title: {scene['title']}")
+    print()
+
+    # Тест 5: Нарушение порядка нумерации
+    test_text5 = """**3-1. ИНТ. СЦЕНА ОДИН. **
+Текст.
+
+**2-5. ИНТ. СЦЕНА ДВА. **
+Текст.
+
+**4-1. ИНТ. СЦЕНА ТРИ. **
+Текст."""
+
+    print("=== ТЕСТ 5: Проверка порядка нумерации ===")
+    scenes5 = _default_parse_scenes(test_text5)
+    for scene in scenes5:
+        print(f"ID: {scene['id']}, Title: {scene['title']}")
+    print()

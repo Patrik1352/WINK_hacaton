@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Обработка документов</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="header-title">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                Обработка документов
+            </h1>
+            <p class="header-subtitle">Загрузите документ и выберите поля для обработки</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Шаг 1: Загрузка файла -->
+            <section class="step-card" id="step-upload">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <h2 class="step-title">Загрузка файла</h2>
+                </div>
+                <div class="step-content">
+                    <div class="upload-area" id="upload-area">
+                        <input type="file" id="file-input" accept=".docx,.pdf" hidden>
+                        <div class="upload-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                        </div>
+                        <p class="upload-text">Перетащите файл сюда или <span class="upload-link">выберите файл</span></p>
+                        <p class="upload-hint">Поддерживаются форматы: DOCX, PDF (макс. 50 МБ)</p>
+                        <div class="file-info" id="file-info" style="display: none;">
+                            <div class="file-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                </svg>
+                            </div>
+                            <div class="file-details">
+                                <p class="file-name" id="file-name"></p>
+                                <p class="file-size" id="file-size"></p>
+                            </div>
+                            <button class="btn-remove" id="btn-remove-file">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Шаг 2: Выбор полей -->
+            <section class="step-card" id="step-fields" style="display: none;">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <h2 class="step-title">Выбор полей</h2>
+                </div>
+                <div class="step-content">
+                    <p class="fields-description">Выберите поля, которые необходимо извлечь из документа:</p>
+                    <div class="fields-container" id="fields-container">
+                        <!-- Поля будут добавлены динамически -->
+                    </div>
+                    <div class="fields-actions">
+                        <button class="btn btn-secondary" id="btn-select-all">Выбрать все</button>
+                        <button class="btn btn-secondary" id="btn-deselect-all">Снять все</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Шаг 3: Превью -->
+            <section class="step-card" id="step-preview" style="display: none;">
+                <div class="step-header">
+                    <div class="step-number">3</div>
+                    <h2 class="step-title">Превью обработки</h2>
+                </div>
+                <div class="step-content">
+                    <p class="preview-description">Предварительный просмотр результата обработки (первые 2 страницы):</p>
+                    <div class="preview-container" id="preview-container">
+                        <div class="preview-loading" id="preview-loading">
+                            <div class="spinner"></div>
+                            <p>Обработка превью...</p>
+                        </div>
+                        <div class="preview-content" id="preview-content" style="display: none;">
+                            <!-- Превью будет добавлено динамически -->
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" id="btn-generate-preview">Обновить превью</button>
+                </div>
+            </section>
+
+            <!-- Шаг 4: Обработка -->
+            <section class="step-card" id="step-process" style="display: none;">
+                <div class="step-header">
+                    <div class="step-number">4</div>
+                    <h2 class="step-title">Обработка файла</h2>
+                </div>
+                <div class="step-content">
+                    <div class="process-info">
+                        <p>Выбрано полей: <strong id="selected-fields-count">0</strong></p>
+                        <p>Готовы обработать весь файл?</p>
+                    </div>
+                    <button class="btn btn-primary btn-large" id="btn-process">
+                        <span class="btn-text">Начать обработку</span>
+                        <div class="btn-spinner" style="display: none;"></div>
+                    </button>
+                    <div class="process-progress" id="process-progress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                        <p class="progress-text" id="progress-text">Обработка...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Шаг 5: Результат -->
+            <section class="step-card step-card-success" id="step-result" style="display: none;">
+                <div class="step-header">
+                    <div class="step-number step-number-success">✓</div>
+                    <h2 class="step-title">Обработка завершена</h2>
+                </div>
+                <div class="step-content">
+                    <div class="success-message">
+                        <svg class="success-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                        <p>Файл успешно обработан!</p>
+                    </div>
+                    <div class="result-actions">
+                        <a href="#" class="btn btn-primary btn-large" id="btn-download" download>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Скачать Excel файл
+                        </a>
+                        <button class="btn btn-secondary" id="btn-new-file">Обработать другой файл</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
+
+

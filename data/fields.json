@@ -1,0 +1,40 @@
+[
+    {
+        "id": "id",
+        "name": "ID",
+        "type": "number",
+        "description": "Уникальный идентификатор"
+    },
+    {
+        "id": "title",
+        "name": "Заголовок",
+        "type": "text",
+        "description": "Заголовок сцены"
+    },
+    {
+        "id": "text",
+        "name": "Текст",
+        "type": "text",
+        "description": "Текст сцены"
+    },
+    {
+        "id": "location",
+        "name": "Локация",
+        "type": "text",
+        "description": "Место действия"
+    },
+    {
+        "id": "time",
+        "name": "Время",
+        "type": "text",
+        "description": "Время действия"
+    },
+    {
+        "id": "characters",
+        "name": "Персонажи",
+        "type": "text",
+        "description": "Участвующие персонажи"
+    }
+]
+
+
