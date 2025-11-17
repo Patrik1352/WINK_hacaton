@@ -20,14 +20,16 @@ class FileParserService:
     def parse_file(self, file_path) -> pd.DataFrame:
         with open(file_path, 'r') as f:
             self.loaded_document = json.load(f)
-    
+        idss = []
         for scene_i in tqdm(range(len(self.loaded_document))):
             full_scene = str(self.loaded_document[scene_i]['id']) + ' ' + self.loaded_document[scene_i]['title'] + ' ' + self.loaded_document[scene_i]['text']
+            idss.append(self.loaded_document[scene_i]['id'])
             parsed_scene = json.loads(self.extract_model_class.parse(full_scene)[0])
             if self.df.empty:
                 self.df = pd.DataFrame({key: [value] for key, value in parsed_scene.items()})
             else:
                 df_new = pd.DataFrame({key: [value] for key, value in parsed_scene.items()})
                 self.df = pd.concat([self.df, df_new]).reset_index(drop=True)
+        self.df['ids'] = idss
         
         return self.df[self.output_columns]

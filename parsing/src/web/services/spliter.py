@@ -1,6 +1,6 @@
 import sys
 sys.path.append("../")
-from src.web.agents.md_scene_agent import _default_parse_scenes
+from agents.md_scene_agent import _default_parse_scenes
 import json
 
 def markdown_to_scenes(markdown_text: str, output_path: str):
