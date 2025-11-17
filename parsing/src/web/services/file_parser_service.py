@@ -10,7 +10,12 @@ class FileParserService:
         self.df = pd.DataFrame()        
         self.output_columns = output_columns 
         self.extract_model_class = extract_model_class
-        self.extract_model_class.init_model()
+        
+    # def start(self):
+    #     self.extract_model_class.init_model()
+    
+    # def stop(self):
+    #     self.extract_model_class.stop_model()
     
     def parse_file(self, file_path) -> pd.DataFrame:
         with open(file_path, 'r') as f:

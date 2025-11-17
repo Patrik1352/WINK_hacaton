@@ -22,7 +22,7 @@ class NuExtract:
             "top_k": None
         }
 
-    def init_model(self):
+    def start_model(self) -> None:
         # model_name = "/home/yc-user/misc/model/NuExtract-2.0-8B"
 
 
@@ -40,6 +40,13 @@ class NuExtract:
                                                     device_map="cuda:0",
                                                     # cache_dir=self.local_dir
                                                     ).to(self.device)
+        
+    def stop_model(self) -> None:
+        if self.model:
+            del self.model
+        torch.cuda.empty_cache()
+        gc.collect()
+        print("Модель удалена из памяти")
     
     def parse(self, document) -> str:
         template = self.__load_template()

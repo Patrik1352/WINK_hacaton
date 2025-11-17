@@ -7,6 +7,8 @@ import uuid
 from utils.file_processor import FileProcessor
 from utils.excel_generator import ExcelGenerator
 from utils.field_loader import FieldLoader
+from services.file_parser_service import FileParserService
+from utils.nuextract_model import NuExtract
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -123,16 +125,23 @@ def process_file():
     
     # Вызываем пользовательскую логику обработки
     # Здесь пользователь должен реализовать свою логику обработки
-    processed_data = file_processor.process_file(filepath, selected_fields)
+
+    ################### NUEXTRACT ###################
+    model = NuExtract()
+    model.start_model()
+    file_parser = FileParserService(selected_fields, model)
+    resulted_file = file_parser.parse_file(filepath)
+    # processed_data = file_processor.process_file(filepath, selected_fields)
+    ################### NUEXTRACT ###################
     
     # Генерируем Excel файл
     output_filename = f"{session_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-    output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
+    # output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
     
-    excel_generator.generate_excel(processed_data, selected_fields, output_path)
+    # excel_generator.generate_excel(processed_data, selected_fields, output_path)
     
     # Сохраняем путь к файлу в сессии
-    session['output_file'] = output_path
+    session['output_file'] = resulted_file
     session['output_filename'] = output_filename
     
     return jsonify({
@@ -177,7 +186,6 @@ def custom_logic():
         'success': True,
         'result': result
     })
-
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)
