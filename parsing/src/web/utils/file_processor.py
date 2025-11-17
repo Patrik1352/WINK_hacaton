@@ -1,22 +1,25 @@
 import os
-print('Запуск из: ', os.getcwd())
 import sys
-sys.path.append('../../../')
-sys.path.append('../../')
+sys.path.append('../')
 from docx import Document
 import fitz  # PyMuPDF
 from typing import List, Dict, Any
 import time
-from parsing.extract_text.pdf_docx_to_md import file_to_markdown
-from parsing.split_screens.spliter import markdown_to_scenes
+from services.pdf_docx_to_md import file_to_markdown
+from services.spliter import markdown_to_scenes
+from services.synopsis_generator import SynopsisGenerator
 from tqdm.auto import tqdm
+from config import config
+from utils.nuextract_model import NuExtract
+from services.file_parser_service import FileParserService
+
 
 
 class FileProcessor:
     """Класс для обработки загруженных файлов"""
     
     def __init__(self):
-        pass
+        self.syn_gen = SynopsisGenerator()
     
     def extract_text_from_docx(self, filepath: str) -> str:
         """Извлечение текста из DOCX файла"""
@@ -70,7 +73,7 @@ class FileProcessor:
         
         return preview_result
     
-    def process_file(self, filepath: str, fields: List[str], syn_gen, options: Dict = None, ) -> List[Dict[str, Any]]:
+    def process_file(self, filepath: str, fields: List[str], options: Dict = None, ) -> List[Dict[str, Any]]:
         """
         Обработка всего файла.
         ВАЖНО: Пользователь должен реализовать свою логику обработки здесь.
@@ -81,11 +84,11 @@ class FileProcessor:
         
         # ЗДЕСЬ ПОЛЬЗОВАТЕЛЬ ДОЛЖЕН ДОБАВИТЬ СВОЮ ЛОГИКУ ОБРАБОТКИ
         # Это пример структуры результата
-        processed_data = self._apply_custom_logic(filepath, syn_gen = syn_gen)
+        processed_data = self._apply_custom_logic(filepath, fields)
         
         return processed_data
     
-    def _apply_custom_logic(self, filepath: str, syn_gen) -> List[Dict[str, Any]]:
+    def _apply_custom_logic(self, filepath: str, fields) -> List[Dict[str, Any]]:
         """
         Применение пользовательской логики обработки.
         ЭТОТ МЕТОД ДОЛЖЕН БЫТЬ ПЕРЕОПРЕДЕЛЕН ПОЛЬЗОВАТЕЛЕМ.
@@ -98,7 +101,7 @@ class FileProcessor:
         # делаем из файла markdown и сохраняем в файл
         filename = os.path.splitext(os.path.basename(filepath))[0]
         timestamp = int(time.time())
-        base_dir = "/home/yc-user/EGOR_DONT_ENTER/WINK_hacaton/temp/"
+        base_dir = config.TEMP_PATH
         # Создаём новую папку: название_файла_время
         new_dir = os.path.join(base_dir, f"{filename}_{timestamp}")
         os.makedirs(new_dir, exist_ok=True)  # создаёт директорию, если её нет
@@ -109,17 +112,46 @@ class FileProcessor:
 
         output_path = os.path.join(new_dir, f"{filename}.json")
         scenes = markdown_to_scenes(text, output_path)
+
+        print('Пошел NuExtract')
+        model = NuExtract()
+        model.start_model()
+        print('Обработка полей')
+        selected_fields = fields
+        print(f'Поля: {selected_fields}')
+
+        flg_syn = False
+        if 'Синопсис' in selected_fields:
+            index = selected_fields.index('Синопсис')
+            del selected_fields[index]
+            flg_syn = True
+        file_parser = FileParserService(selected_fields, model)
+        resulted_file = file_parser.parse_file(output_path)
+
+        model.stop_model()
+
+
+
         # scenes - JSON: LIST[DICT({'id': str , 'text': str, 'title': str})]
         # отправляем по 10 текстов сцен на генерацию синопсиса
-        synopses = []
-        for i in tqdm(range(0, len(scenes), 10)):
-            batch = scenes[i:i+10]
-            screen_texts = [scene['text'] for scene in batch]
+        if flg_syn:
+            print('Загрузка АВИТО МОДЕЛИ')
+            self.syn_gen.load_model()
+            print('КОНЕЦ загрузки АВИТО МОДЕЛИ')
 
-            synopses_batch = syn_gen.generate_multiple_in_one_prompt(screen_texts)
-            synopses.extend(synopses_batch)
+            synopses = []
+            for i in tqdm(range(0, len(scenes), 10)):
+                batch = scenes[i:i+10]
+                screen_texts = [scene['text'] for scene in batch]
+
+                synopses_batch = self.syn_gen.generate_multiple_in_one_prompt(screen_texts)
+                synopses.extend(synopses_batch)
+
+            self.syn_gen.unload_model()
 
 
+
+            resulted_file['Синопсис'] = synopses
 
 
 
@@ -136,6 +168,7 @@ class FileProcessor:
         #             record[field] = f"Значение для {field} из строки {i+1}"
         #         result.append(record)
         
-        return scenes, synopses
+        return resulted_file
+        
 
 

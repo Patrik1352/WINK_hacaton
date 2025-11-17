@@ -18,6 +18,8 @@ class Config:
 
     # для NuExtract
     NUEXTRACT_PATH = MODELS_DIR / "NuExtract-2.0-8B"
+    TEMP_PATH = "temp/"
+    AVIBE_PATH = MODELS_DIR / "avibe"
 
 
 config = Config()

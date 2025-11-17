@@ -5,14 +5,14 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from typing import List, Union, Optional
 import torch
-
+from config import config
 
 class SynopsisGenerator:
     """Класс для генерации синопсисов сцен."""
     
     def __init__(
         self,
-        model_name: str = "/home/yc-user/EGOR_DONT_ENTER/models/avibe",
+        model_name: config.AVIBE_PATH,
         device_map: str = "auto",
         dtype: str = "auto"
     ):
@@ -468,31 +468,31 @@ class SynopsisGenerator:
         
         return all_responses
 
-def unload_model(self):
-    """Полностью выгружает модель и освобождает занятую VRAM."""
-    try:
-        # Удаляем объекты модели и токенизатора
-        if self.model is not None:
-            del self.model
-            self.model = None
+    def unload_model(self):
+        """Полностью выгружает модель и освобождает занятую VRAM."""
+        try:
+            # Удаляем объекты модели и токенизатора
+            if self.model is not None:
+                del self.model
+                self.model = None
 
-        if self.tokenizer is not None:
-            del self.tokenizer
-            self.tokenizer = None
+            if self.tokenizer is not None:
+                del self.tokenizer
+                self.tokenizer = None
 
-        # Явная сборка мусора
-        import gc
-        gc.collect()
+            # Явная сборка мусора
+            import gc
+            gc.collect()
 
-        # Очистка CUDA памяти
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-            torch.cuda.ipc_collect()
+            # Очистка CUDA памяти
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+                torch.cuda.ipc_collect()
 
-        print("Модель успешно выгружена из памяти, VRAM освобождена.")
+            print("Модель успешно выгружена из памяти, VRAM освобождена.")
 
-    except Exception as e:
-        print(f"Ошибка при выгрузке модели: {e}")
+        except Exception as e:
+            print(f"Ошибка при выгрузке модели: {e}")
 
 
 # Пример использования

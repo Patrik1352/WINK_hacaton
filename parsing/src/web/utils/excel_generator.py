@@ -19,13 +19,7 @@ class ExcelGenerator:
             fields: Список полей для включения в Excel
             output_path: Путь для сохранения файла
         """
-
-        screens, synopses = data
-
-        df = pd.DataFrame({'id': [s['id'] for s in screens],
-        'text': [s['text'] for s in screens],
-        'title': [s['title'] for s in screens], 
-        'Синопсис': synopses})
+        df = data
 
         df.to_excel(output_path, index = False)
 

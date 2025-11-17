@@ -1,98 +1,98 @@
 [
     {
-        "id": "series",
+        "id": "Серия",
         "name": "Серия",
-        "type": "text",
+        "type": "integer",
         "description": "Номер или название серии"
     },
     {
-        "id": "scene",
+        "id": "Сцена",
         "name": "Сцена",
-        "type": "text",
+        "type": "verbatim-string",
         "description": "Номер или название сцены"
     },
     {
-        "id": "mode",
+        "id": "Режим",
         "name": "Режим",
-        "type": "text",
+        "type": "string",
         "description": "Режим съемки"
     },
     {
-        "id": "int_ext",
+        "id": "Инт / нат",
         "name": "Инт / нат",
-        "type": "text",
+        "type": "string",
         "description": "Интерьер или натура"
     },
     {
-        "id": "object",
+        "id": "Объект",
         "name": "Объект",
-        "type": "text",
+        "type": "string",
         "description": "Основной объект"
     },
     {
-        "id": "subobject",
+        "id": "Подобъект",
         "name": "Подобъект",
-        "type": "text",
+        "type": "string",
         "description": "Дополнительный объект"
     },
     {
-        "id": "synopsis",
+        "id": "Синопсис",
         "name": "Синопсис",
         "type": "text",
         "description": "Краткое описание сцены"
     },
     {
-        "id": "season",
+        "id": "Время года",
         "name": "Время года",
-        "type": "text",
+        "type": "string",
         "description": "Сезон действия"
     },
     {
-        "id": "characters",
+        "id": "Персонажи",
         "name": "Персонажи",
-        "type": "text",
+        "type": ["string"],
         "description": "Участвующие персонажи"
     },
     {
-        "id": "extras",
+        "id": "Массовка",
         "name": "Массовка",
-        "type": "text",
+        "type": ["string"],
         "description": "Массовка и статисты"
     },
     {
-        "id": "makeup",
+        "id": "Грим",
         "name": "Грим",
-        "type": "text",
+        "type": ["string"],
         "description": "Требования к гриму"
     },
     {
-        "id": "costume",
+        "id": "Костюм",
         "name": "Костюм",
-        "type": "text",
+        "type": ["string"],
         "description": "Требования к костюмам"
     },
     {
-        "id": "props",
+        "id": "Реквизит",
         "name": "Реквизит",
-        "type": "text",
+        "type": ["string"],
         "description": "Необходимый реквизит"
     },
     {
-        "id": "vehicle",
+        "id": "Игровой транспорт",
         "name": "Игровой транспорт",
-        "type": "text",
+        "type": ["string"],
         "description": "Используемый транспорт"
     },
     {
-        "id": "stunt",
+        "id": "Трюк",
         "name": "Трюк",
-        "type": "text",
+        "type": ["string"],
         "description": "Трюковые элементы"
     },
     {
-        "id": "animals",
+        "id": "Животные",
         "name": "Животные",
-        "type": "text",
+        "type": ["string"],
         "description": "Участвующие животные"
     }
 ]
