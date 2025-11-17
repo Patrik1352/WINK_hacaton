@@ -324,6 +324,7 @@ class SynopsisGenerator:
 - максимум {max_sentences} предложения
 - максимум {max_chars} символов
 - описывать действие полно и точно
+- не должно быть повторов
 Что не нужно указывать:
 - время суток, место действия НЕ нужно указывать
 
@@ -466,6 +467,32 @@ class SynopsisGenerator:
             all_responses.extend(responses)
         
         return all_responses
+
+def unload_model(self):
+    """Полностью выгружает модель и освобождает занятую VRAM."""
+    try:
+        # Удаляем объекты модели и токенизатора
+        if self.model is not None:
+            del self.model
+            self.model = None
+
+        if self.tokenizer is not None:
+            del self.tokenizer
+            self.tokenizer = None
+
+        # Явная сборка мусора
+        import gc
+        gc.collect()
+
+        # Очистка CUDA памяти
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.ipc_collect()
+
+        print("Модель успешно выгружена из памяти, VRAM освобождена.")
+
+    except Exception as e:
+        print(f"Ошибка при выгрузке модели: {e}")
 
 
 # Пример использования

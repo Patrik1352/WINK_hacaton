@@ -9,8 +9,7 @@ from typing import List, Dict, Any
 import time
 from parsing.extract_text.pdf_docx_to_md import file_to_markdown
 from parsing.split_screens.spliter import markdown_to_scenes
-# from parsing.make_short_disc.synopsis_generator import SynopsisGenerator
-
+from tqdm.auto import tqdm
 
 
 class FileProcessor:
@@ -71,7 +70,7 @@ class FileProcessor:
         
         return preview_result
     
-    def process_file(self, filepath: str, fields: List[str], options: Dict = None) -> List[Dict[str, Any]]:
+    def process_file(self, filepath: str, fields: List[str], syn_gen, options: Dict = None, ) -> List[Dict[str, Any]]:
         """
         Обработка всего файла.
         ВАЖНО: Пользователь должен реализовать свою логику обработки здесь.
@@ -82,11 +81,11 @@ class FileProcessor:
         
         # ЗДЕСЬ ПОЛЬЗОВАТЕЛЬ ДОЛЖЕН ДОБАВИТЬ СВОЮ ЛОГИКУ ОБРАБОТКИ
         # Это пример структуры результата
-        processed_data = self._apply_custom_logic(filepath)
+        processed_data = self._apply_custom_logic(filepath, syn_gen = syn_gen)
         
         return processed_data
     
-    def _apply_custom_logic(self, filepath: str) -> List[Dict[str, Any]]:
+    def _apply_custom_logic(self, filepath: str, syn_gen) -> List[Dict[str, Any]]:
         """
         Применение пользовательской логики обработки.
         ЭТОТ МЕТОД ДОЛЖЕН БЫТЬ ПЕРЕОПРЕДЕЛЕН ПОЛЬЗОВАТЕЛЕМ.
@@ -107,8 +106,24 @@ class FileProcessor:
 
         output_path = os.path.join(new_dir, f"{filename}.md")
         text = file_to_markdown(filepath, output_path)
+
         output_path = os.path.join(new_dir, f"{filename}.json")
         scenes = markdown_to_scenes(text, output_path)
+        # scenes - JSON: LIST[DICT({'id': str , 'text': str, 'title': str})]
+        # отправляем по 10 текстов сцен на генерацию синопсиса
+        synopses = []
+        for i in tqdm(range(0, len(scenes), 10)):
+            batch = scenes[i:i+10]
+            screen_texts = [scene['text'] for scene in batch]
+
+            synopses_batch = syn_gen.generate_multiple_in_one_prompt(screen_texts)
+            synopses.extend(synopses_batch)
+
+
+
+
+
+
 
         # lines = text.split('\n')
         # result = []
@@ -121,6 +136,6 @@ class FileProcessor:
         #             record[field] = f"Значение для {field} из строки {i+1}"
         #         result.append(record)
         
-        return scenes
+        return scenes, synopses
 
 

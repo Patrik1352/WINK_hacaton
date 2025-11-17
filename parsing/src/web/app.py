@@ -8,6 +8,11 @@ from utils.file_processor import FileProcessor
 from utils.excel_generator import ExcelGenerator
 from utils.field_loader import FieldLoader
 
+import sys
+sys.path.append('../../')
+from make_short_disc.synopsis_generator import SynopsisGenerator
+
+
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
@@ -26,7 +31,6 @@ for folder in [app.config['UPLOAD_FOLDER'], app.config['OUTPUT_FOLDER']]:
 file_processor = FileProcessor()
 excel_generator = ExcelGenerator()
 field_loader = FieldLoader()
-
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
@@ -123,7 +127,7 @@ def process_file():
     
     # Вызываем пользовательскую логику обработки
     # Здесь пользователь должен реализовать свою логику обработки
-    processed_data = file_processor.process_file(filepath, selected_fields)
+    processed_data = file_processor.process_file(filepath, selected_fields, syn_gen)
     
     # Генерируем Excel файл
     output_filename = f"{session_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
