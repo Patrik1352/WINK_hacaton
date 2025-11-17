@@ -1,7 +1,16 @@
 import os
+print('Запуск из: ', os.getcwd())
+import sys
+sys.path.append('../../../')
+sys.path.append('../../')
 from docx import Document
 import fitz  # PyMuPDF
 from typing import List, Dict, Any
+import time
+from parsing.extract_text.pdf_docx_to_md import file_to_markdown
+from parsing.split_screens.spliter import markdown_to_scenes
+# from parsing.make_short_disc.synopsis_generator import SynopsisGenerator
+
 
 
 class FileProcessor:
@@ -70,20 +79,14 @@ class FileProcessor:
         if options is None:
             options = {}
         
-        file_ext = filepath.rsplit('.', 1)[1].lower()
-        
-        if file_ext == 'docx':
-            text = self.extract_text_from_docx(filepath)
-        else:  # PDF
-            text = self.extract_text_from_pdf(filepath)
         
         # ЗДЕСЬ ПОЛЬЗОВАТЕЛЬ ДОЛЖЕН ДОБАВИТЬ СВОЮ ЛОГИКУ ОБРАБОТКИ
         # Это пример структуры результата
-        processed_data = self._apply_custom_logic(text, fields, options)
+        processed_data = self._apply_custom_logic(filepath)
         
         return processed_data
     
-    def _apply_custom_logic(self, text: str, fields: List[str], options: Dict = None) -> List[Dict[str, Any]]:
+    def _apply_custom_logic(self, filepath: str) -> List[Dict[str, Any]]:
         """
         Применение пользовательской логики обработки.
         ЭТОТ МЕТОД ДОЛЖЕН БЫТЬ ПЕРЕОПРЕДЕЛЕН ПОЛЬЗОВАТЕЛЕМ.
@@ -92,17 +95,32 @@ class FileProcessor:
         """
         # Пример: разбиваем текст на части и создаем записи
         # Пользователь должен заменить это на свою логику
-        lines = text.split('\n')
-        result = []
+
+        # делаем из файла markdown и сохраняем в файл
+        filename = os.path.splitext(os.path.basename(filepath))[0]
+        timestamp = int(time.time())
+        base_dir = "/home/yc-user/EGOR_DONT_ENTER/WINK_hacaton/temp/"
+        # Создаём новую папку: название_файла_время
+        new_dir = os.path.join(base_dir, f"{filename}_{timestamp}")
+        os.makedirs(new_dir, exist_ok=True)  # создаёт директорию, если её нет
+
+
+        output_path = os.path.join(new_dir, f"{filename}.md")
+        text = file_to_markdown(filepath, output_path)
+        output_path = os.path.join(new_dir, f"{filename}.json")
+        scenes = markdown_to_scenes(text, output_path)
+
+        # lines = text.split('\n')
+        # result = []
         
-        for i, line in enumerate(lines):
-            if line.strip():
-                record = {'id': i + 1}
-                for field in fields:
-                    # Пример заполнения полей
-                    record[field] = f"Значение для {field} из строки {i+1}"
-                result.append(record)
+        # for i, line in enumerate(lines):
+        #     if line.strip():
+        #         record = {'id': i + 1}
+        #         for field in fields:
+        #             # Пример заполнения полей
+        #             record[field] = f"Значение для {field} из строки {i+1}"
+        #         result.append(record)
         
-        return result
+        return scenes
 
 
